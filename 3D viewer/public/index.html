@@ -5,13 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3D Viewer</title>
     <style>
-        body { font-family: Arial, sans-serif; }
-        #viewer { width: 100%; height: 600px; }
+        body { font-family: Arial, sans-serif; margin: 0; }
+        #viewer { width: 100%; height: 100vh; position: relative; }
+        #controls { position: absolute; top: 10px; right: 10px; }
+        button { margin: 5px; padding: 10px; }
     </style>
 </head>
 <body>
-    <h1>Trying 3d view</h1>
+    <h1 style="text-align: center;">View 3D STL File</h1>
     <div id="viewer"></div>
+    <div id="controls">
+        <button id="zoom-in">Zoom In</button>
+        <button id="zoom-out">Zoom Out</button>
+    </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
     <script>
@@ -27,9 +33,19 @@
             const mesh = new THREE.Mesh(geometry, material);
             scene.add(mesh);
             camera.position.z = 100;
-            renderer.render(scene, camera);
+            renderer.render(scene, camera); 
         }, undefined, function (error) {
             console.error(error);
+        });
+
+        document.getElementById('zoom-in').addEventListener('click', function () {
+            camera.position.z -= 10;
+            renderer.render(scene, camera);
+        });
+
+        document.getElementById('zoom-out').addEventListener('click', function () {
+            camera.position.z += 10;
+            renderer.render(scene, camera);
         });
     </script>
 </body>
