@@ -5,48 +5,138 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3D Viewer</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; }
-        #viewer { width: 100%; height: 100vh; position: relative; }
-        #controls { position: absolute; top: 10px; right: 10px; }
-        button { margin: 5px; padding: 10px; }
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            overflow: hidden; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            height: 100vh; 
+            background-color: #f0f0f0; 
+        }
+        #viewer-container {
+            width: 80vw; 
+            height: 80vh; 
+            position: relative; 
+            background-color: black; 
+            border-radius: 15px; 
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        #viewer {
+            width: 100%; 
+            height: 100%; 
+        }
+        #controls {
+            position: absolute; 
+            top: 10px; 
+            right: 10px; 
+            display: flex; 
+            flex-direction: column;
+            z-index: 1;
+        }
+        .button { 
+            background-color: rgba(255, 255, 255, 0.8); 
+            border: none; 
+            border-radius: 50%; 
+            width: 50px; 
+            height: 50px; 
+            margin: 5px; 
+            font-size: 24px; 
+            line-height: 50px; 
+            text-align: center; 
+            cursor: pointer; 
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s;
+        }
+        .button:hover {
+            background-color: rgba(255, 255, 255, 1);
+        }
+        .button:active {
+            background-color: rgba(200, 200, 200, 1);
+        }
+        .title {
+            position: absolute; 
+            top: 10px; 
+            left: 10px; 
+            color: white; 
+            font-size: 24px; 
+            z-index: 1;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
     </style>
 </head>
 <body>
-    <h1 style="text-align: center;">View 3D STL File</h1>
-    <div id="viewer"></div>
-    <div id="controls">
-        <button id="zoom-in">Zoom In</button>
-        <button id="zoom-out">Zoom Out</button>
+    <div id="viewer-container">
+        <div class="title">3D Viewer</div>
+        <div id="controls">
+            <button id="zoom-in" class="button">+</button>
+            <button id="zoom-out" class="button">−</button>
+        </div>
+        <div id="viewer"></div>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
     <script>
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer();
-        renderer.setSize(window.innerWidth, window.innerHeight);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth * 0.8, window.innerHeight * 0.8);
         document.getElementById('viewer').appendChild(renderer.domElement);
 
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.25;
+        controls.screenSpacePanning = false;
+        controls.enableZoom = true;
+
+        
         const loader = new THREE.STLLoader();
         loader.load('/cad/1.stl', function (geometry) {
             const material = new THREE.MeshNormalMaterial();
             const mesh = new THREE.Mesh(geometry, material);
             scene.add(mesh);
             camera.position.z = 100;
-            renderer.render(scene, camera); 
+            render();
         }, undefined, function (error) {
             console.error(error);
         });
 
-        document.getElementById('zoom-in').addEventListener('click', function () {
-            camera.position.z -= 10;
+        function render() {
+            requestAnimationFrame(render);
+            controls.update();
             renderer.render(scene, camera);
+        }
+
+        document.getElementById('zoom-in').addEventListener('click', function () {
+            camera.zoom += 0.1;
+            camera.updateProjectionMatrix();
+            render();
         });
 
         document.getElementById('zoom-out').addEventListener('click', function () {
-            camera.position.z += 10;
-            renderer.render(scene, camera);
+            camera.zoom -= 0.1;
+            camera.updateProjectionMatrix();
+            render();
         });
+
+        document.getElementById('viewer').addEventListener('wheel', function(event) {
+            event.preventDefault();
+            controls.handleMouseWheel(event);
+        });
+
+        window.addEventListener('resize', () => {
+            const width = window.innerWidth * 0.8;
+            const height = window.innerHeight * 0.8;
+            renderer.setSize(width, height);
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            render();
+        });
+
+        render();
     </script>
 </body>
 </html>
